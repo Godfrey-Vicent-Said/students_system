@@ -1,4 +1,8 @@
 <?php
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once 'Database.php';
 require_once 'User.php';
 
@@ -11,18 +15,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (!empty($username) && !empty($password)) {
         $database = new Database();
         $db = $database->connect();
-        $user = new User($db);
+        $userObj = new User($db);
 
-        $role = $user->login($username, $password);
+        // Kujaribu kuingia kwenye mfumo
+        $role = $userObj->login($username, $password);
 
         if ($role) {
-            // Kuelekeza mtumiaji kulingana na majukumu yake (Role-based redirection)
-            if ($role == 'admin') {
-                header("Location: admin_dashboard.php");
+            // BAADA YA LOGIN KUKUBALI: Tunatafuta ID na Username halisi kutoka kwenye database ili kuziweka kwenye Session
+            // Hii inasaidia kurasa za Dashboard kumtambua mwanafunzi au admin
+            $query = "SELECT id, username, role FROM users WHERE username = :username";
+            $stmt = $db->prepare($query);
+            $stmt->execute(['username' => $username]);
+            $userData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($userData) {
+                $_SESSION['user_id'] = $userData['id'];
+                $_SESSION['username'] = $userData['username'];
+                $_SESSION['role'] = $userData['role'];
+
+                // Kuelekeza mtumiaji kulingana na majukumu yake (Role-based redirection)
+                if ($_SESSION['role'] === 'admin') {
+                    header("Location: admin_dashboard.php");
+                } else {
+                    header("Location: student_dashboard.php");
+                }
+                exit();
             } else {
-                header("Location: student_dashboard.php");
+                $error = "Hitilafu ya mfumo imetokea. Tafadhali jaribu tena!";
             }
-            exit();
         } else {
             $error = "Username au Password siyo sahihi!";
         }
@@ -40,7 +60,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <title>Ingia Mfumo - CBE Student System</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-cover bg-center h-screen flex items-center justify-center" style="background-image: url('https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?q=80&w=1920');">
+<body class="bg-cover bg-center h-screen flex items-center justify-center relative" style="background-image: url('https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?q=80&w=1920');">
     
     <div class="absolute inset-0 bg-black opacity-60"></div>
 
@@ -49,7 +69,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <p class="text-sm text-center text-gray-500 mb-6">Ingia ili kuendelea na Mfumo wa Usajili</p>
         
         <?php if (!empty($error)): ?>
-            <div class="p-3 bg-red-100 text-red-700 rounded mb-4 text-sm text-center">
+            <div class="p-3 bg-red-100 text-red-700 border border-red-200 rounded mb-4 text-sm text-center font-medium">
                 <?php echo $error; ?>
             </div>
         <?php endif; ?>
@@ -57,14 +77,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <form action="login.php" method="POST" class="space-y-4">
             <div>
                 <label class="block text-sm font-semibold text-gray-600">Username</label>
-                <input type="text" name="username" required class="w-full p-3 border border-gray-300 rounded mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="text" name="username" required 
+                       class="w-full p-3 border border-gray-300 rounded mt-1 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-sm">
             </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-600">Nenosiri (Password)</label>
-                <input type="password" name="password" required class="w-full p-3 border border-gray-300 rounded mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="password" name="password" required 
+                       class="w-full p-3 border border-gray-300 rounded mt-1 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-sm">
             </div>
             
-            <button type="submit" class="w-full bg-emerald-600 text-white p-3 rounded font-bold hover:bg-emerald-700 transition">Ingia Mfumo</button>
+            <button type="submit" class="w-full bg-emerald-600 text-white p-3 rounded font-bold hover:bg-emerald-700 transition shadow-md">Ingia Mfumo</button>
         </form>
 
         <p class="text-sm text-center text-gray-600 mt-6">

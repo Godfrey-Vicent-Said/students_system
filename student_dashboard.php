@@ -19,11 +19,46 @@ $studentObj = new Student($db);
 // Kuchukua taarifa za mwanafunzi (Zitafunguliwa - Decrypted ndani ya class)
 $current_student = $studentObj->getProfile($_SESSION['user_id']);
 
-// Kuchukua kozi zote zilizopo kwa ajili ya kuonyesha (CRUD: Read)
+// === SHUGHULIKIA USAJILI WA KOZI (BACKEND LOGIC) ===
+$message = "";
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register_course_id'])) {
+    $course_id = $_POST['register_course_id'];
+    $user_id = $_SESSION['user_id'];
+
+    try {
+        // Angalia kama ameshasajili kozi yoyote kabla (Mwanafunzi anasajili kozi moja tu)
+        $check_query = "SELECT * FROM student_courses WHERE user_id = :user_id";
+        $check_stmt = $db->prepare($check_query);
+        $check_stmt->execute(['user_id' => $user_id]);
+        
+        if ($check_stmt->rowCount() > 0) {
+            $message = "<div class='bg-red-100 text-red-800 p-3 rounded-lg mb-4 text-sm font-semibold border border-red-200'>⚠️ Tayari umeshasajili kozi! Huwezi kusajili kozi zaidi ya moja.</div>";
+        } else {
+            // Ingiza usajili mpya kwenye database
+            $insert_query = "INSERT INTO student_courses (user_id, course_id) VALUES (:user_id, :course_id)";
+            $insert_stmt = $db->prepare($insert_query);
+            $insert_stmt->execute(['user_id' => $user_id, 'course_id' => $course_id]);
+            $message = "<div class='bg-green-100 text-green-800 p-3 rounded-lg mb-4 text-sm font-semibold border border-green-200'>✅ Umefanikiwa kusajili kozi hii kikamilifu!</div>";
+        }
+    } catch (PDOException $e) {
+        $message = "<div class='bg-red-100 text-red-800 p-3 rounded-lg mb-4 text-sm font-semibold border border-red-200'>⚠️ Hitilafu imetokea wakati wa kusajili kozi.</div>";
+    }
+}
+
+// Kuchukua jina la kozi aliyoisajili mwanafunzi huyu kwa sasa kutoka database
+$enrolled_course_name = "Bado Huijasajili Kozi";
+$enrolled_query = "SELECT c.course_name FROM student_courses sc JOIN courses c ON sc.course_id = c.id WHERE sc.user_id = :user_id";
+$enrolled_stmt = $db->prepare($enrolled_query);
+$enrolled_stmt->execute(['user_id' => $_SESSION['user_id']]);
+if ($enrolled_row = $enrolled_stmt->fetch(PDO::FETCH_ASSOC)) {
+    $enrolled_course_name = $enrolled_row['course_name'];
+}
+
+// Kuchukua kozi zote zilizopo kwa ajili ya kuonyesha kwenye jedwali
 $query_courses = "SELECT * FROM courses ORDER BY course_name ASC";
 $stmt_courses = $db->prepare($query_courses);
 $stmt_courses->execute();
-$all_courses = $stmt_courses->fetchAll();
+$all_courses = $stmt_courses->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -46,6 +81,7 @@ $all_courses = $stmt_courses->fetchAll();
 
     <div class="max-w-6xl mx-auto p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
         
+        <!-- Upande wa Kushoto: Taarifa Binafsi -->
         <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-blue-600 h-fit">
             <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Taarifa Zako Binafsi</h2>
             <div class="space-y-3 text-sm">
@@ -65,15 +101,24 @@ $all_courses = $stmt_courses->fetchAll();
                     <span class="block text-gray-500 font-medium">Namba ya Simu:</span>
                     <strong class="text-gray-800"><?php echo htmlspecialchars($current_student['phone_number'] ?? $current_student['phone'] ?? 'N/A'); ?></strong>
                 </div>
+                <div class="pt-2 border-t">
+                    <span class="block text-gray-500 font-medium">Kozi Uliyosajili:</span>
+                    <strong class="text-emerald-600 text-sm font-bold block mt-1"><?php echo htmlspecialchars($enrolled_course_name); ?></strong>
+                </div>
             </div>
             <div class="mt-6 p-3 bg-green-50 text-green-800 text-xs rounded border border-green-200">
                 🛡️ Data zako zimesimbwa (Encrypted) kwenye database kwa usalama wa hali ya juu.
             </div>
         </div>
 
+        <!-- Upande wa Kulia: Orodha ya Kozi na Search -->
         <div class="bg-white p-6 rounded-lg shadow-md md:col-span-2 border-t-4 border-emerald-600">
             <h2 class="text-lg font-bold text-gray-800 mb-2 border-b pb-2">Kozi Zinazopatikana Chuo</h2>
             
+            <!-- Alert Message (Inaonyesha kama usajili umefanikiwa au umefeli) -->
+            <?php echo $message; ?>
+
+            <!-- Search Input -->
             <div class="mb-4">
                 <input type="text" id="courseSearch" placeholder="Tafuta kozi kwa jina au herufi fupi (Mfano: BIT)..." 
                        class="w-full p-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition text-sm">
@@ -95,11 +140,16 @@ $all_courses = $stmt_courses->fetchAll();
                                     <td class="p-3 font-mono font-bold text-blue-600 course-code"><?php echo htmlspecialchars($course['course_code']); ?></td>
                                     <td class="p-3 course-name"><?php echo htmlspecialchars($course['course_name']); ?></td>
                                     <td class="p-3 text-center">
-                                        <button class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded text-xs font-semibold shadow-sm transition">Sajili Kozi</button>
+                                        <!-- Form ya kutuma ID ya kozi kwenda backend ikibonyezwa -->
+                                        <form method="POST" action="" onsubmit="return confirm('Je, una uhakika unataka kusajili kozi ya <?php echo htmlspecialchars($course['course_code']); ?>?');">
+                                            <input type="hidden" name="register_course_id" value="<?php echo $course['id']; ?>">
+                                            <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded text-xs font-semibold shadow-sm transition">Register for a Course</button>
+                                        </form>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
                             
+                            <!-- Ujumbe kama hakuna kozi inayolingana na iliyotafutwa -->
                             <tr id="noMatchRow" style="display: none;">
                                 <td colspan="3" class="p-8 text-center text-gray-500 italic">
                                     Hakuna kozi inayolingana na ulivyotafuta.
@@ -115,6 +165,7 @@ $all_courses = $stmt_courses->fetchAll();
 
     </div>
 
+    <!-- JavaScript ya Real-time Search ya Jedwali -->
     <script>
     document.getElementById('courseSearch').addEventListener('keyup', function() {
         let filter = this.value.toLowerCase().trim();
@@ -122,7 +173,6 @@ $all_courses = $stmt_courses->fetchAll();
         let matchCount = 0;
 
         rows.forEach(function(row) {
-            // Inasoma jina la kozi na kodi yake kwa pamoja
             let name = row.querySelector('.course-name').textContent.toLowerCase();
             let code = row.querySelector('.course-code').textContent.toLowerCase();
             
@@ -134,7 +184,6 @@ $all_courses = $stmt_courses->fetchAll();
             }
         });
 
-        // Kuonyesha ujumbe wa "Hakuna kozi" kama ikikosa matokeo
         let noMatchRow = document.getElementById('noMatchRow');
         if (noMatchRow) {
             if (matchCount === 0 && filter !== '') {
