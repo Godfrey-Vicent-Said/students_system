@@ -1,42 +1,37 @@
 <?php
 if (session_status() == PHP_SESSION_NONE) { session_start(); }
-
-// Ulinzi: Kama si admin, kataa moja kwa moja
 if (!isset($_SESSION['user_id']) || trim($_SESSION['role']) !== 'admin') {
-    header("Location: login.php");
-    exit();
+    header("Location: login.php"); exit();
 }
-
 require_once 'Database.php';
 $db = (new Database())->connect();
+
+// Chota idadi ya wanafunzi waliosajiliwa
+$stmt = $db->query("SELECT COUNT(*) FROM student_courses");
+$student_count = $stmt->fetchColumn();
 ?>
 <!DOCTYPE html>
 <html lang="sw">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Dashboard | CBE Portal</title>
+    <title>Admin Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 min-h-screen">
-    <nav class="bg-slate-900 text-white p-4 shadow-lg flex justify-between items-center">
+<body class="bg-gray-100">
+    <nav class="bg-slate-900 text-white p-4 flex justify-between items-center">
         <h1 class="font-bold text-xl">Admin Panel 🛠️</h1>
-        <a href="logout.php" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-sm transition">Logout</a>
+        <a href="logout.php" class="bg-red-600 px-4 py-2 rounded text-sm">Logout</a>
     </nav>
 
-    <div class="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
-        <h2 class="text-2xl font-bold text-gray-800 mb-4">Karibu, Admin!</h2>
-        <p class="text-gray-600">Mfumo umekamilika na unafanya kazi kikamilifu.</p>
-        
-        <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="p-6 border border-emerald-200 bg-emerald-50 rounded-lg">
-                <h3 class="font-bold text-emerald-800">Usimamizi wa Kozi</h3>
-                <p class="text-sm text-gray-600 mt-2">Dhibiti kozi zote zilizopo chuoni.</p>
-            </div>
-            <div class="p-6 border border-blue-200 bg-blue-50 rounded-lg">
-                <h3 class="font-bold text-blue-800">Wanafunzi</h3>
-                <p class="text-sm text-gray-600 mt-2">Angalia wanafunzi waliojisajili.</p>
-            </div>
-        </div>
+    <div class="max-w-5xl mx-auto mt-10 p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <a href="manage_courses.php" class="p-6 bg-white border-l-4 border-emerald-500 shadow hover:shadow-lg transition">
+            <h3 class="font-bold text-emerald-800 text-lg">Usimamizi wa Kozi</h3>
+            <p class="text-sm text-gray-600">Ongeza, hariri au futa kozi za chuo.</p>
+        </a>
+        <a href="view_students.php" class="p-6 bg-white border-l-4 border-blue-500 shadow hover:shadow-lg transition">
+            <h3 class="font-bold text-blue-800 text-lg">Wanafunzi (<?php echo $student_count; ?>)</h3>
+            <p class="text-sm text-gray-600">Angalia orodha ya wanafunzi waliojisajili.</p>
+        </a>
     </div>
 </body>
 </html>
