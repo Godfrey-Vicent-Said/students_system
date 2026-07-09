@@ -15,9 +15,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($user && password_verify($password, $user['password'])) {
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['username'] = $user['username'];
-        $_SESSION['role'] = trim($user['role']); // Hii inaleta 'admin' au 'student'
+        $_SESSION['role'] = trim($user['role']); 
 
-        // Redirection ya Admin
+        // Redirection ya Admin na Student
         if ($_SESSION['role'] === 'admin') {
             header("Location: admin_dashboard.php");
         } else {
@@ -40,12 +40,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <div class="absolute inset-0 bg-black opacity-60"></div>
     <div class="relative bg-white p-8 rounded-lg shadow-2xl w-full max-w-md z-10">
         <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Ingia Mfumo</h2>
-        <?php if($error): ?><p class="text-red-500 text-center mb-4"><?php echo $error; ?></p><?php endif; ?>
+        
+        <?php if($error): ?>
+            <p class="text-red-500 text-center mb-4 bg-red-100 p-2 rounded"><?php echo $error; ?></p>
+        <?php endif; ?>
+
         <form method="POST" class="space-y-4">
-            <input type="text" name="username" placeholder="Username" required class="w-full p-3 border rounded">
-            <input type="password" name="password" placeholder="Password" required class="w-full p-3 border rounded">
-            <button type="submit" class="w-full bg-emerald-600 text-white p-3 rounded font-bold hover:bg-emerald-700">Ingia</button>
+            <input type="text" name="username" placeholder="Username" required class="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 outline-none">
+            <input type="password" name="password" placeholder="Password" required class="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 outline-none">
+            <button type="submit" class="w-full bg-emerald-600 text-white p-3 rounded font-bold hover:bg-emerald-700 transition duration-200">Ingia</button>
         </form>
+
+        <div class="mt-4 text-center">
+            <p class="text-sm text-gray-600">
+                Huna akaunti? 
+                <a href="register.php" class="text-emerald-600 font-bold hover:underline">Jisajili hapa</a>
+            </p>
+        </div>
     </div>
 </body>
 </html>
