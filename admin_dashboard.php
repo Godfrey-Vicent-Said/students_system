@@ -14,35 +14,29 @@ $db = (new Database())->connect();
 <html lang="sw">
 <head>
     <meta charset="UTF-8">
-    <title>CBE Admin Dashboard</title>
+    <title>Admin Dashboard | CBE Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 text-gray-900">
-    <div class="min-h-screen flex flex-col">
-        <header class="bg-emerald-700 text-white p-6 shadow-lg">
-            <div class="max-w-6xl mx-auto flex justify-between items-center">
-                <h1 class="text-2xl font-bold">CBE Student Management System</h1>
-                <a href="logout.php" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg font-semibold transition">Logout</a>
-            </div>
-        </header>
+<body class="bg-gray-100 min-h-screen">
+    <nav class="bg-slate-900 text-white p-4 shadow-lg flex justify-between items-center">
+        <h1 class="font-bold text-xl">Admin Panel 🛠️</h1>
+        <a href="logout.php" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-sm transition">Logout</a>
+    </nav>
 
-        <main class="max-w-6xl mx-auto p-6 w-full">
-            <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-200">
-                <h2 class="text-xl font-bold mb-4 text-emerald-800">Karibu Msimamizi, <?php echo htmlspecialchars($_SESSION['username']); ?></h2>
-                <p class="text-gray-600">Hapa unaweza kusimamia kozi na wanafunzi waliosajiliwa kwenye mfumo.</p>
-                
-                <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="p-4 border rounded-lg bg-emerald-50">
-                        <h3 class="font-bold text-emerald-900">Idadi ya Kozi</h3>
-                        <p class="text-3xl font-bold text-emerald-700">--</p>
-                    </div>
-                    <div class="p-4 border rounded-lg bg-blue-50">
-                        <h3 class="font-bold text-blue-900">Wanafunzi</h3>
-                        <p class="text-3xl font-bold text-blue-700">--</p>
-                    </div>
-                </div>
+    <div class="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Karibu, Admin!</h2>
+        <p class="text-gray-600">Mfumo umekamilika na unafanya kazi kikamilifu.</p>
+        
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-6 border border-emerald-200 bg-emerald-50 rounded-lg">
+                <h3 class="font-bold text-emerald-800">Usimamizi wa Kozi</h3>
+                <p class="text-sm text-gray-600 mt-2">Dhibiti kozi zote zilizopo chuoni.</p>
             </div>
-        </main>
+            <div class="p-6 border border-blue-200 bg-blue-50 rounded-lg">
+                <h3 class="font-bold text-blue-800">Wanafunzi</h3>
+                <p class="text-sm text-gray-600 mt-2">Angalia wanafunzi waliojisajili.</p>
+            </div>
+        </div>
     </div>
 </body>
 </html>
